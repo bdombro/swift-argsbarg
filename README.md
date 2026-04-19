@@ -1,15 +1,13 @@
-```
-                          ___.                        
-_____ _______  ____  _____\_ |__ _____ _______  ____  
-\__  \\_  __ \/ ___\/  ___/| __ \\__  \\_  __ \/ ___\ 
- / __ \|  | \/ /_/  >___ \ | \_\ \/ __ \|  | \/ /_/  >
-(____  /__|  \___  /____  >|___  (____  /__|  \___  / 
-     \/     /_____/     \/     \/     \/     /_____/  
-```
+![Logo](logo.png)
+<!-- Big money NE - https://patorjk.com/software/taag/#p=testall&f=Bulbhead&t=shebangsy&x=none&v=4&h=4&w=80&we=false> -->
 
 # ArgsBarg
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![GitHub](https://img.shields.io/badge/GitHub-bdombro%2Fswift--argsbarg-181717?logo=github)](https://github.com/bdombro/swift-argsbarg)
+
+[![CI](https://github.com/bdombro/swift-argsbarg/actions/workflows/ci.yml/badge.svg)](https://github.com/bdombro/swift-argsbarg/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+[![Swift Package Index platforms](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fbdombro%2Fswift-argsbarg%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/bdombro/swift-argsbarg) [![Swift Package Index Swift versions](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fbdombro%2Fswift-argsbarg%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/bdombro/swift-argsbarg)
 
 Build beautiful, well-behaved CLI apps in Swift — **no third-party runtime dependencies**, just add the **ArgsBarg** package.
 

@@ -54,3 +54,7 @@ completion-bash:
 # Print the zsh completion script for the Nested example (`--print` avoids installing to ~/.zsh/).
 completion-zsh:
     swift run ArgsBargNested completion zsh --print
+
+# Publish a new release
+release-prep bump:
+    python3 scripts/release.py "{{ bump }}"
