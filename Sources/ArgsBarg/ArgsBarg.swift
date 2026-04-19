@@ -38,15 +38,48 @@ private func cliBuiltinCompletionGroup(appName: String) -> CliCommand {
         children: [
             CliCommand(
                 name: "bash",
-                description: "Generate the autocompletion script for bash.",
-                notes: "Writes the completion script to stdout.\nSource it from ~/.bashrc.",
+                description: "Print a bash tab-completion script.",
+                notes: """
+                    Output is the whole script.
+
+                    Pipe it to a file, or feed it straight into your shell.
+
+                    To keep it across restarts, save it and source that file from ~/.bashrc. For example:
+
+                      \(appName) completion bash > ~/.bash_completion.d/\(appName)
+                      echo 'source ~/.bash_completion.d/\(appName)' >> ~/.bashrc
+
+                    To try it only in this session (nothing written to disk):
+
+                      source <(\(appName) completion bash)
+                    """,
                 handler: { _ in }
             ),
             CliCommand(
                 name: "zsh",
-                description: "Print the zsh completion script to stdout.",
-                notes:
-                    "Redirect to ~/.zsh/completions/\(zshFile) and add that directory to fpath before compinit.",
+                description: "Print a zsh tab-completion script.",
+                notes: """
+                    Output is the whole script.
+
+                    Two common ways to use it:
+
+                    Quick setup — one line for ~/.zshrc (no extra file, no fpath changes). Runs \(appName) once when the shell reads your config:
+
+                      eval "$(\(appName) completion zsh)"
+
+                    Same idea without eval (process substitution):
+
+                      source <(\(appName) completion zsh)
+
+                    File-based setup — save the script and let zsh load it from disk (skip this if you do not want \(appName) to run during shell startup):
+
+                      \(appName) completion zsh > ~/.zsh/completions/\(zshFile)
+
+                    Then in ~/.zshrc, before compinit:
+
+                      fpath=(~/.zsh/completions $fpath)
+                      autoload -Uz compinit && compinit
+                    """,
                 handler: { _ in }
             ),
         ]

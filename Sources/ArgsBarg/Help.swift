@@ -126,8 +126,8 @@ private func padVisible(_ s: String, _ width: Int) -> String {
 }
 
 
-/// Word-wraps plain text into lines of at most `width` columns.
-private func wrapText(_ text: String, _ width: Int) -> [String] {
+/// Word-wraps one paragraph into lines of at most `width` columns (uses string length; notes are plain text).
+private func wrapParagraph(_ text: String, _ width: Int) -> [String] {
     let available = max(1, width)
     var out: [String] = []
     var cur = ""
@@ -145,6 +145,25 @@ private func wrapText(_ text: String, _ width: Int) -> [String] {
     }
     if !cur.isEmpty {
         out.append(cur)
+    }
+    return out
+}
+
+
+/// Wraps text for help boxes. Respects newline characters in the source; reflows each non-indented line as a paragraph.
+/// Lines with leading whitespace are kept on one row (shell examples).
+private func wrapText(_ text: String, _ width: Int) -> [String] {
+    var out: [String] = []
+    for line in text.components(separatedBy: "\n") {
+        if line.trimmingCharacters(in: .whitespaces).isEmpty {
+            out.append("")
+            continue
+        }
+        if line.first?.isWhitespace == true {
+            out.append(line)
+            continue
+        }
+        out.append(contentsOf: wrapParagraph(line, width))
     }
     if out.isEmpty {
         out.append("")

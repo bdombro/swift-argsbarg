@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-19
+
+### Changed
+
+- Help **Notes** rendering respects **newlines** in the source string; indented lines are kept as single rows (shell examples). Built-in **`completion bash`** / **`completion zsh`** notes use extra blank lines for readability.
+- Built-in help **Notes** for **`completion bash`** / **`completion zsh`**: plainer wording, short intro lines, then concrete shell examples. **`completion zsh`** notes also cover **`eval "$(…)"`**, **`source <(…)`**, and file + **fpath**.
+
 ## [0.1.1] - 2026-04-19
 
 ### Added
@@ -41,7 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[Unreleased]: https://github.com/bdombro/swift-argsbarg/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/bdombro/swift-argsbarg/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/bdombro/swift-argsbarg/releases/tag/v0.2.0
 [0.1.1]: https://github.com/bdombro/swift-argsbarg/releases/tag/v0.1.1
 [0.1.0]: https://github.com/bdombro/swift-argsbarg/releases/tag/v0.1.0
 [0.0.3]: https://github.com/bdombro/swift-argsbarg/releases/tag/v0.0.3
