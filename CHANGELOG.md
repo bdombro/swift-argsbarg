@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update CI/CD
+- Tighten Cursor changelog rule (short agent checklist; `[Unreleased]` + footer-link guard).
+
 ## [0.0.3] - 2026-04-19
 
 ### Changed
