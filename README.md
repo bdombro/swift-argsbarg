@@ -13,6 +13,15 @@ Build beautiful, well-behaved CLI apps in Swift — **no third-party runtime dep
 
 Vs. [Swift ArgumentParser](https://github.com/apple/swift-argument-parser), **ArgsBarg** is *schema-first* -- define your entire CLI’s structure, commands, options, and help in a single, explicit data model, making the command-line interface centralized, clear and self-describing upfront.
 
+Halps! -->
+![help-preview.png](docs/help-preview.png)
+
+Sub-level Halps! -->
+![help-l2-preview.png](docs/help-l2-preview.png)
+
+Shell completions! -->
+![completions-preview.png](docs/completions-preview.png)
+
 ## What is it?
 
 Everything you need for a first-class CLI:
@@ -80,20 +89,16 @@ cliRun(
 Every app gets:
 
 - `-h` / `--help` at any routing depth (scoped help).
-- **`completion bash` / `completion zsh`** — print or install shell completion scripts (injected by `cliRun`).
-- **`--generate-completion-script=<bash|zsh>`** — root-level alias: same output as `completion bash` / `completion zsh` (zsh prints to stdout; use `completion zsh` without `--print` to install under `~/.zsh/completions/`).
+- **`completion bash` / `completion zsh`** — print shell completion scripts to stdout (injected by `cliRun`).
 
-Do not declare a top-level command named **`completion`** or a root **`CliOption`** named **`generate-completion-script`** — both are reserved for these built-ins.
+Do not declare a top-level command named **`completion`** — it is reserved for this built-in.
 
 ### Shell completions
 
 ```bash
 myapp completion bash                             > ~/.bash_completion.d/myapp
 # or: source <(myapp completion bash)
-myapp completion zsh --print                      # inspect / redirect
-myapp completion zsh                              # install under ~/.zsh/completions/
-myapp --generate-completion-script=bash           # root alias (= completion bash)
-myapp --generate-completion-script=zsh             # root alias (= completion zsh --print)
+myapp completion zsh                              > ~/.zsh/completions/_myapp   # then: fpath+=(~/.zsh/completions); autoload -Uz compinit && compinit
 ```
 
 ---
@@ -105,7 +110,7 @@ In `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/bdombro/swift-argsbarg.git", from: "0.0.3"),
+    .package(url: "https://github.com/bdombro/swift-argsbarg.git", from: "0.1.0"),
 ],
 targets: [
     .target(
@@ -184,7 +189,7 @@ swift run ArgsBargNested ./README.md
 | `cliHelpRender(schema:helpPath:useStderr:)` | Render help (`schema` is the program root `CliCommand`). |
 | `cliArgsBargVersion` | Semver string. |
 
-Reserved identifiers (validated at startup): root command **`completion`**, root option **`generate-completion-script`**.
+Reserved identifier (validated at startup): root command **`completion`**.
 
 Internal parsing (`parse`, `postParseValidate`, `cliValidateRoot`) is `internal`; use `@testable import ArgsBarg` in tests. Nested commands must not set `fallbackCommand` or a non-default `fallbackMode` until per-group fallback is implemented.
 
