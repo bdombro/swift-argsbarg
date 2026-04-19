@@ -56,5 +56,5 @@ completion-zsh:
     swift run ArgsBargNested completion zsh --print
 
 # Publish a new release
-release-prep bump:
+release bump:
     python3 scripts/release.py "{{ bump }}"
