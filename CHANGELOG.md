@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.1] - 2026-04-19
+
 ### Added
 
 - Shell completion generation: `completion bash` / `completion zsh` subcommands injected by `cliRun`; `--generate-completion-script=<bash|zsh>` root alias. Root identifiers **`completion`** (child name) and **`generate-completion-script`** (root option) are reserved.
@@ -37,5 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - No `completion` subcommand (unlike the C++ library’s built-ins).
 
-[Unreleased]: https://github.com/bdombro/swift-argsbarg/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/bdombro/swift-argsbarg/compare/v0.0.1...HEAD
+[0.0.1]: https://github.com/bdombro/swift-argsbarg/releases/tag/v0.0.1
 [0.1.0]: https://github.com/bdombro/swift-argsbarg/releases/tag/v0.1.0
