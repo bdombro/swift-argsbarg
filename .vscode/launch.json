@@ -1,0 +1,44 @@
+{
+  "configurations": [
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:swift-argsbarg}",
+      "name": "Debug ArgsBargMinimal",
+      "target": "ArgsBargMinimal",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug ArgsBargMinimal"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:swift-argsbarg}",
+      "name": "Release ArgsBargMinimal",
+      "target": "ArgsBargMinimal",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release ArgsBargMinimal"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:swift-argsbarg}",
+      "name": "Debug ArgsBargNested",
+      "target": "ArgsBargNested",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug ArgsBargNested"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:swift-argsbarg}",
+      "name": "Release ArgsBargNested",
+      "target": "ArgsBargNested",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release ArgsBargNested"
+    }
+  ]
+}
