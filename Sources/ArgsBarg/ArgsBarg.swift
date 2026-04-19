@@ -14,23 +14,25 @@ import Foundation
 /// Library version (semver-style).
 public let cliArgsBargVersion = "0.1.0"
 
-/// Merges the caller's program root with reserved completion commands and the completion-script option.
+/// Merges the caller's program root with the reserved `completion` / `{bash,zsh}` subtree.
 internal func cliRootMergedWithBuiltins(_ root: CliCommand) -> CliCommand {
     var merged = root
-    merged.children.append(cliBuiltinCompletionGroup())
-    merged.options.append(
-        CliOption(
-            name: "generate-completion-script",
-            description: "Print a shell completion script and exit (bash or zsh).",
-            kind: .string
-        ))
+    merged.children.append(cliBuiltinCompletionGroup(appName: root.name))
     return merged
 }
 
 
+/// zsh completion file basename: leading `_`, hyphens in `appName` become `_` (matches common `_myapp` naming).
+private func zshCompletionUnderscoreFileName(appName: String) -> String {
+    let prefixed = "_" + appName
+    return String(prefixed.map { $0 == "-" ? Character("_") : $0 })
+}
+
+
 /// Builds the static `completion` / `bash` / `zsh` subtree used for shell integration.
-private func cliBuiltinCompletionGroup() -> CliCommand {
-    CliCommand(
+private func cliBuiltinCompletionGroup(appName: String) -> CliCommand {
+    let zshFile = zshCompletionUnderscoreFileName(appName: appName)
+    return CliCommand(
         name: "completion",
         description: "Generate the autocompletion script for shells.",
         children: [
@@ -42,15 +44,9 @@ private func cliBuiltinCompletionGroup() -> CliCommand {
             ),
             CliCommand(
                 name: "zsh",
-                description: "Generate the autocompletion script for zsh.",
+                description: "Print the zsh completion script to stdout.",
                 notes:
-                    "Without --print, installs to ~/.zsh/completions/_{app}. Use --print for stdout.",
-                options: [
-                    CliOption(
-                        name: "print",
-                        description: "Print script to stdout instead of installing."
-                    )
-                ],
+                    "Redirect to ~/.zsh/completions/\(zshFile) and add that directory to fpath before compinit.",
                 handler: { _ in }
             ),
         ]
@@ -96,30 +92,12 @@ public func cliRun(_ root: CliCommand) -> Never {
             exit(1)
         }
 
-        if let shell = pr.opts["generate-completion-script"] {
-            switch shell {
-            case "bash":
-                print(completionBashScript(schema: merged), terminator: "")
-                exit(0)
-            case "zsh":
-                completionZshInstallOrPrint(schema: merged, printOnly: true)
-                exit(0)
-            default:
-                let color = ttyFd(STDERR_FILENO)
-                let msg =
-                    "Unknown shell '\(shell)' for --generate-completion-script. Use bash or zsh."
-                FileHandle.standardError.write(
-                    Data("\(color ? cliStyleRed(msg) : msg)\n".utf8))
-                exit(1)
-            }
-        }
-
         if pr.path == ["completion", "bash"] {
             print(completionBashScript(schema: merged), terminator: "")
             exit(0)
         }
         if pr.path == ["completion", "zsh"] {
-            completionZshInstallOrPrint(schema: merged, printOnly: pr.opts["print"] != nil)
+            print(completionZshScript(schema: merged), terminator: "")
             exit(0)
         }
 

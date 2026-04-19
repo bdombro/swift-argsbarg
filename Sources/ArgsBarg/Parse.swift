@@ -593,11 +593,6 @@ func cliValidateRoot(_ root: CliCommand) throws {
     if root.children.contains(where: { $0.name == "completion" }) {
         throw CliSchemaValidationError.message("Reserved command name: completion")
     }
-    if root.options.contains(where: { $0.name == "generate-completion-script" }) {
-        throw CliSchemaValidationError.message(
-            "Reserved root option name: generate-completion-script")
-    }
-
     if root.fallbackCommand == nil {
         if root.fallbackMode == .missingOrUnknown || root.fallbackMode == .unknownOnly {
             throw CliSchemaValidationError.message("this fallbackMode requires fallbackCommand")

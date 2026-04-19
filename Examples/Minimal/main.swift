@@ -2,7 +2,7 @@ import ArgsBarg
 
 cliRun(
     CliCommand(
-        name: "helloapp",
+        name: "ArgsBargMinimal",
         description: "Tiny demo.",
         children: [
             CliCommand(

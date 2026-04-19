@@ -3,7 +3,7 @@ import Foundation
 
 cliRun(
     CliCommand(
-        name: "nesteddemo",
+        name: "ArgsBargNested",
         description: "Nested groups demo.",
         children: [
             CliCommand(
@@ -76,5 +76,5 @@ cliRun(
             ),
         ],
         fallbackCommand: "read",
-        fallbackMode: .unknownOnly
+        fallbackMode: .missingOrUnknown
     ))

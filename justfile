@@ -51,9 +51,9 @@ example-nested-lookup-help:
 completion-bash:
     swift run ArgsBargNested completion bash
 
-# Print the zsh completion script for the Nested example (`--print` avoids installing to ~/.zsh/).
+# Print the zsh completion script for the Nested example (pipe to a file under fpath).
 completion-zsh:
-    swift run ArgsBargNested completion zsh --print
+    swift run ArgsBargNested completion zsh
 
 # Publish a new release
 release bump:

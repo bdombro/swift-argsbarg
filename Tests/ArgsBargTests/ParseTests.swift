@@ -121,20 +121,6 @@ final class ParseTests: XCTestCase {
         }
     }
 
-    func testCompletionReservedGenerateScriptOption() throws {
-        let root = CliCommand(
-            name: "app",
-            description: "",
-            options: [
-                CliOption(name: "generate-completion-script", description: "oops", kind: .string),
-            ],
-            children: [CliCommand(name: "hello", description: "", handler: { _ in })]
-        )
-        XCTAssertThrowsError(try cliValidateRoot(root)) { err in
-            XCTAssertTrue(String(describing: err).contains("Reserved root option name"))
-        }
-    }
-
     func testCompletionBashScriptContainsAppName() throws {
         let root = CliCommand(
             name: "myapp",
@@ -209,4 +195,5 @@ final class ParseTests: XCTestCase {
             XCTAssertTrue(String(describing: err).contains("Fallback is only supported on the program root"))
         }
     }
+
 }
