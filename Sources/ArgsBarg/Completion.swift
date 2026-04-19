@@ -1,3 +1,7 @@
+// Shell completion script generation for bash and zsh, aligned with the C++ ArgsBarg emitters.
+// Keeps tab-completion behavior consistent with the same CLI schema used at runtime.
+// Walks the command tree into scopes, then emits shell functions that simulate argv parsing.
+
 import Foundation
 
 // Generated bash/zsh scripts match cpp-argsbarg (`completion_*_inline.hpp`).
@@ -5,6 +9,7 @@ import Foundation
 
 // MARK: - Shared (matches cpp-argsbarg detail/completion_shared.hpp)
 
+/// One completion scope: subcommands, options, path key, and whether file completion applies.
 private struct ScopeRec {
     var kids: [CliCommand]
     var opts: [CliOption]
@@ -12,10 +17,14 @@ private struct ScopeRec {
     var wantsFiles: Bool
 }
 
+
+/// Returns whether the command expects any positional arguments (for file completion).
 private func hasPositionalArguments(_ cmd: CliCommand) -> Bool {
     cmd.positionals.contains { $0.positional }
 }
 
+
+/// Depth-first walk that appends one `ScopeRec` per command node.
 private func walkScopes(cmdPath: String, cmd: CliCommand, acc: inout [ScopeRec]) {
     acc.append(
         ScopeRec(
@@ -30,6 +39,8 @@ private func walkScopes(cmdPath: String, cmd: CliCommand, acc: inout [ScopeRec])
     }
 }
 
+
+/// Lists all completion scopes: synthetic root plus each subtree in declaration order.
 private func collectScopes(schema: CliCommand) -> [ScopeRec] {
     var acc: [ScopeRec] = []
     acc.append(
@@ -45,6 +56,8 @@ private func collectScopes(schema: CliCommand) -> [ScopeRec] {
     return acc
 }
 
+
+/// Sanitizes the binary name into a bash-safe identifier fragment.
 private func identToken(_ s: String) -> String {
     var r = ""
     r.reserveCapacity(s.count)
@@ -58,6 +71,8 @@ private func identToken(_ s: String) -> String {
     return r
 }
 
+
+/// Escapes a string for use inside single quotes in generated shell scripts.
 private func escShellSingleQuoted(_ s: String) -> String {
     var r = ""
     r.reserveCapacity(s.count + 8)
@@ -76,12 +91,14 @@ private func escShellSingleQuoted(_ s: String) -> String {
 private let kHelpLong = "--help"
 private let kHelpShort = "-h"
 
+/// Bash function name derived from the program name (hyphens become underscores).
 private func mainName(from schemaName: String) -> String {
     String(schemaName.map { $0 == "-" ? Character("_") : $0 })
 }
 
 // MARK: - Bash (completion_bash_inline.hpp)
 
+/// Emits bash `_nac_consume_long` for long options across scopes.
 private func emitConsumeLong(ident: String, scopes: [ScopeRec]) -> String {
     var o = ""
     o += "_\(ident)_nac_consume_long() {\n"
@@ -111,6 +128,8 @@ private func emitConsumeLong(ident: String, scopes: [ScopeRec]) -> String {
     return o
 }
 
+
+/// Emits bash `_nac_consume_short` for bundled short options.
 private func emitConsumeShort(ident: String, scopes: [ScopeRec]) -> String {
     var o = ""
     o += "_\(ident)_nac_consume_short() {\n"
@@ -154,6 +173,8 @@ private func emitConsumeShort(ident: String, scopes: [ScopeRec]) -> String {
     return o
 }
 
+
+/// Emits bash to map a token to a child scope id when entering a subcommand.
 private func emitMatchChild(
     ident: String, scopes: [ScopeRec], pathIndex: [String: Int]
 ) -> String {
@@ -180,6 +201,8 @@ private func emitMatchChild(
     return o
 }
 
+
+/// Emits bash that replays argv up to the current word and prints the active scope id.
 private func emitSimulate(ident: String) -> String {
     var o = ""
     o += "_\(ident)_nac_simulate() {\n"
@@ -218,6 +241,8 @@ private func emitSimulate(ident: String) -> String {
     return o
 }
 
+
+/// Emits the main completion function and `complete -F` registration for bash.
 private func emitMainBody(schema: CliCommand, ident: String, scopes: [ScopeRec]) -> String {
     let main = mainName(from: schema.name)
     var o = ""
@@ -275,6 +300,8 @@ private func emitMainBody(schema: CliCommand, ident: String, scopes: [ScopeRec])
     return o
 }
 
+
+/// Builds a complete bash completion script for `schema.name`.
 func completionBashScript(schema: CliCommand) -> String {
     let ident = identToken(schema.name)
     let scopes = collectScopes(schema: schema)
@@ -294,6 +321,7 @@ func completionBashScript(schema: CliCommand) -> String {
 
 // MARK: - Zsh (completion_zsh_inline.hpp)
 
+/// zsh `_describe` label for an option, including value placeholders when needed.
 private func zshOptionLabel(_ op: CliOption) -> String {
     let base = "--\(op.name)"
     switch op.kind {
@@ -303,6 +331,8 @@ private func zshOptionLabel(_ op: CliOption) -> String {
     }
 }
 
+
+/// Emits zsh `typeset` arrays of commands and options per scope.
 private func emitScopeArrays(ident: String, scopes: [ScopeRec]) -> String {
     var lines = ""
     for (i, sc) in scopes.enumerated() {
@@ -337,6 +367,8 @@ private func emitScopeArrays(ident: String, scopes: [ScopeRec]) -> String {
     return lines
 }
 
+
+/// zsh variant of long-option consumption helper.
 private func emitConsumeLongZsh(ident: String, scopes: [ScopeRec]) -> String {
     var o = ""
     o += "_\(ident)_nac_consume_long() {\n"
@@ -366,6 +398,8 @@ private func emitConsumeLongZsh(ident: String, scopes: [ScopeRec]) -> String {
     return o
 }
 
+
+/// zsh variant of short-option consumption helper.
 private func emitConsumeShortZsh(ident: String, scopes: [ScopeRec]) -> String {
     var o = ""
     o += "_\(ident)_nac_consume_short() {\n"
@@ -409,6 +443,8 @@ private func emitConsumeShortZsh(ident: String, scopes: [ScopeRec]) -> String {
     return o
 }
 
+
+/// zsh variant of subcommand routing helper.
 private func emitMatchChildZsh(
     ident: String, scopes: [ScopeRec], pathIndex: [String: Int]
 ) -> String {
@@ -435,6 +471,8 @@ private func emitMatchChildZsh(
     return o
 }
 
+
+/// zsh variant of argv simulation; stores result in `REPLY_SID`.
 private func emitSimulateZsh(ident: String) -> String {
     var o = ""
     o += "_\(ident)_nac_simulate() {\n"
@@ -473,6 +511,8 @@ private func emitSimulateZsh(ident: String) -> String {
     return o
 }
 
+
+/// Emits the zsh completion widget and `compdef` line.
 private func emitMainBodyZsh(schema: CliCommand, ident: String) -> String {
     let main = mainName(from: schema.name)
     var o = ""
@@ -505,6 +545,8 @@ private func emitMainBodyZsh(schema: CliCommand, ident: String) -> String {
     return o
 }
 
+
+/// Builds a complete zsh completion script for `schema.name`.
 func completionZshScript(schema: CliCommand) -> String {
     let ident = identToken(schema.name)
     let scopes = collectScopes(schema: schema)
@@ -523,6 +565,8 @@ func completionZshScript(schema: CliCommand) -> String {
     return out
 }
 
+
+/// Writes the zsh script to `~/.zsh/completions` or prints it, depending on `printOnly`.
 func completionZshInstallOrPrint(schema: CliCommand, printOnly: Bool) {
     let script = completionZshScript(schema: schema)
     if printOnly {

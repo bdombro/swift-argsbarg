@@ -1,15 +1,25 @@
+// Public schema types: commands, options, and fallback behavior for the program root.
+// Apps model the CLI as data so parsing and help stay consistent with one definition.
+// These structs are plain value types filled by the app and consumed by validation and parsing.
+
 /// Option values for flags and options (non-positional).
 public enum CliOptionKind {
+    /// Boolean-style flag with no value.
     case presence
+    /// Free-form string value.
     case string
+    /// Numeric value parsed as a strict double string.
     case number
 }
 
 /// When `fallbackCommand` is used for missing or unknown top-level tokens.
 /// Only the program root (the `CliCommand` passed to `cliRun`) may set a non-default mode or a non-nil `fallbackCommand`; nested commands must use defaults until per-group fallback is implemented.
 public enum CliFallbackMode {
+    /// Use the fallback only when argv has no first subcommand token.
     case missingOnly
+    /// Use the fallback when the first token is missing or not a known child name.
     case missingOrUnknown
+    /// Use the fallback only when the first token is not a known child name.
     case unknownOnly
 }
 
@@ -23,6 +33,7 @@ public struct CliOption {
     public var argMin: Int
     public var argMax: Int
 
+    /// Creates an option or positional definition with the usual defaults for arity.
     public init(
         name: String,
         description: String,
@@ -58,6 +69,7 @@ public struct CliCommand {
     /// How `fallbackCommand` is applied (root only).
     public var fallbackMode: CliFallbackMode
 
+    /// Creates a command node with optional subcommands, handler, and fallback settings.
     public init(
         name: String,
         description: String,

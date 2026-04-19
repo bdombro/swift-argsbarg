@@ -1,3 +1,8 @@
+// ArgsBarg entrypoint: single-call CLI execution from a declarative command tree.
+// Apps should not reimplement argv routing; this module validates the schema, parses flags,
+// renders help, and dispatches to the correct leaf handler or built-in completion tooling.
+// Composes the user's root command with reserved completion commands, then runs parse → validate → act.
+
 #if canImport(Darwin)
 import Darwin
 #else
@@ -9,7 +14,7 @@ import Foundation
 /// Library version (semver-style).
 public let cliArgsBargVersion = "0.1.0"
 
-/// User root plus built-in `completion` subcommands and `--generate-completion-script` (for tests / tooling).
+/// Merges the caller's program root with reserved completion commands and the completion-script option.
 internal func cliRootMergedWithBuiltins(_ root: CliCommand) -> CliCommand {
     var merged = root
     merged.children.append(cliBuiltinCompletionGroup())
@@ -22,6 +27,8 @@ internal func cliRootMergedWithBuiltins(_ root: CliCommand) -> CliCommand {
     return merged
 }
 
+
+/// Builds the static `completion` / `bash` / `zsh` subtree used for shell integration.
 private func cliBuiltinCompletionGroup() -> CliCommand {
     CliCommand(
         name: "completion",
@@ -50,7 +57,7 @@ private func cliBuiltinCompletionGroup() -> CliCommand {
     )
 }
 
-/// Validates, parses `CommandLine.arguments`, prints help or errors, invokes the leaf handler, then exits.
+/// Validates the schema, parses argv, prints help or errors, runs completion or the leaf handler, then exits.
 public func cliRun(_ root: CliCommand) -> Never {
     do {
         try cliValidateRoot(root)
@@ -143,11 +150,14 @@ public func cliRun(_ root: CliCommand) -> Never {
     }
 }
 
+
+/// Wraps a message in ANSI red for terminal error lines when stderr is a TTY.
 private func cliStyleRed(_ msg: String) -> String {
     "\u{001B}[31m\(msg)\u{001B}[0m"
 }
 
-/// Print a red error line and contextual help on stderr, then exit with status 1.
+
+/// Prints a red error line and contextual help on stderr, then exits with status 1.
 public func cliErrWithHelp(_ ctx: CliContext, _ msg: String) -> Never {
     let color = ttyFd(STDERR_FILENO)
     let line = color ? cliStyleRed(msg) : msg
@@ -157,3 +167,4 @@ public func cliErrWithHelp(_ ctx: CliContext, _ msg: String) -> Never {
     )
     exit(1)
 }
+

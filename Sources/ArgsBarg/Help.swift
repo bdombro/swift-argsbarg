@@ -1,3 +1,7 @@
+// Help rendering: boxed usage, option tables, wrapping, and TTY-aware color.
+// Matches the C++/Nim ArgsBarg layout so documentation looks consistent across ports.
+// Uses terminal width from `TIOCGWINSZ` and strips ANSI when measuring visible width.
+
 #if canImport(Darwin)
 import Darwin
 #else
@@ -6,35 +10,53 @@ import Glibc
 
 import Foundation
 
-private enum CliStyle {
+/// ANSI and layout helpers for colored help text (no instances; use static methods only).
+private final class TerminalStyle {
+    private init() {}
+
+    /// Concatenates prefix, body, and suffix (used for ANSI sequences).
     static func wrap(_ prefix: String, _ body: String, _ suffix: String) -> String {
         prefix + body + suffix
     }
 
+
+    /// Red foreground for error strings.
     static func red(_ msg: String) -> String {
         wrap("\u{001B}[31m", msg, "\u{001B}[0m")
     }
 
+
+    /// Dim gray foreground.
     static func gray(_ msg: String) -> String {
         wrap("\u{001B}[90m", msg, "\u{001B}[0m")
     }
 
+
+    /// Bold (SGR 1).
     static func bold(_ msg: String) -> String {
         wrap("\u{001B}[1m", msg, "\u{001B}[0m")
     }
 
+
+    /// White foreground for body text in tables.
     static func white(_ msg: String) -> String {
         wrap("\u{001B}[37m", msg, "\u{001B}[0m")
     }
 
+
+    /// Bright cyan bold for option names in usage.
     static func aquaBold(_ msg: String) -> String {
         wrap("\u{001B}[96m\u{001B}[1m", msg, "\u{001B}[0m")
     }
 
+
+    /// Bright green for short-option suffixes.
     static func greenBright(_ msg: String) -> String {
         wrap("\u{001B}[92m", msg, "\u{001B}[0m")
     }
 
+
+    /// Gray bold for section titles inside boxes.
     static func grayBoldTitle(_ title: String) -> String {
         gray(bold(title))
     }
@@ -48,6 +70,7 @@ private let kBoxBL = "\u{2570}" // ╰
 private let kBoxBR = "\u{256F}" // ╯
 private let kBoxH = "\u{2500}" // ─
 
+/// Returns the terminal column count for `fd`, or a sensible default when unknown.
 func helpWidthFd(_ fd: Int32) -> Int {
     var w = winsize()
     if ioctl(fd, UInt(TIOCGWINSZ), &w) == 0 && w.ws_col > 0 {
@@ -56,10 +79,14 @@ func helpWidthFd(_ fd: Int32) -> Int {
     return 80
 }
 
+
+/// Returns whether `fd` refers to an interactive terminal (for color decisions).
 func ttyFd(_ fd: Int32) -> Bool {
     isatty(fd) != 0
 }
 
+
+/// Counts display columns, skipping ANSI SGR sequences.
 private func visibleWidth(_ s: String) -> Int {
     var w = 0
     var i = s.startIndex
@@ -80,18 +107,26 @@ private func visibleWidth(_ s: String) -> Int {
     return w
 }
 
+
+/// Repeats the horizontal box character `n` times.
 private func repeatBoxH(_ n: Int) -> String {
     String(repeating: kBoxH, count: max(0, n))
 }
 
+
+/// Returns a string of `n` ASCII spaces.
 private func spaces(_ n: Int) -> String {
     String(repeating: " ", count: max(0, n))
 }
 
+
+/// Right-pads `s` to `width` visible columns using spaces.
 private func padVisible(_ s: String, _ width: Int) -> String {
     s + spaces(max(0, width - visibleWidth(s)))
 }
 
+
+/// Word-wraps plain text into lines of at most `width` columns.
 private func wrapText(_ text: String, _ width: Int) -> [String] {
     let available = max(1, width)
     var out: [String] = []
@@ -117,6 +152,8 @@ private func wrapText(_ text: String, _ width: Int) -> [String] {
     return out
 }
 
+
+/// Suffix for `--name` in usage when the option takes a value.
 private func optKindLabel(_ k: CliOptionKind) -> String {
     switch k {
     case .presence: return ""
@@ -125,6 +162,8 @@ private func optKindLabel(_ k: CliOptionKind) -> String {
     }
 }
 
+
+/// Formats one option or positional for tables and usage lines, optionally with color.
 func cliOptionLabel(_ o: CliOption, color: Bool) -> String {
     if o.positional {
         if o.argMax == 1 {
@@ -142,25 +181,29 @@ func cliOptionLabel(_ o: CliOption, color: Bool) -> String {
     if let range = r.range(of: ", ") {
         let left = String(r[..<range.upperBound])
         let right = String(r[range.upperBound...])
-        return CliStyle.aquaBold(left) + " " + CliStyle.greenBright(String(right))
+        return TerminalStyle.aquaBold(left) + " " + TerminalStyle.greenBright(String(right))
     }
-    return CliStyle.aquaBold(r)
+    return TerminalStyle.aquaBold(r)
 }
 
+
+/// One row in a help table (label column and description).
 private struct HelpRow {
     var label: String
     var description: String
 }
 
+
+/// Draws a titled box around free-form lines of text.
 private func renderTextBox(title: String, lines: [String], hw: Int, color: Bool) -> [String] {
     guard !lines.isEmpty else { return [] }
 
     let titleLead: String
     if color {
         titleLead =
-            CliStyle.gray(kBoxH + " ")
-            + CliStyle.grayBoldTitle(title)
-            + CliStyle.gray(" ")
+            TerminalStyle.gray(kBoxH + " ")
+            + TerminalStyle.grayBoldTitle(title)
+            + TerminalStyle.gray(" ")
     } else {
         titleLead = kBoxH + " " + title + " "
     }
@@ -177,23 +220,25 @@ private func renderTextBox(title: String, lines: [String], hw: Int, color: Bool)
 
     var out: [String] = []
     out.append(
-        (color ? CliStyle.gray(kBoxTL) : kBoxTL)
+        (color ? TerminalStyle.gray(kBoxTL) : kBoxTL)
             + titleLead
-            + (color ? CliStyle.gray(repeatBoxH(headerFill) + kBoxTR) : repeatBoxH(headerFill) + kBoxTR)
+            + (color ? TerminalStyle.gray(repeatBoxH(headerFill) + kBoxTR) : repeatBoxH(headerFill) + kBoxTR)
     )
     for line in lines {
         let padded = padVisible(line, contentWidth)
         out.append(
-            (color ? CliStyle.gray(kBoxV) : kBoxV) + " " + padded + " "
-                + (color ? CliStyle.gray(kBoxV) : kBoxV)
+            (color ? TerminalStyle.gray(kBoxV) : kBoxV) + " " + padded + " "
+                + (color ? TerminalStyle.gray(kBoxV) : kBoxV)
         )
     }
     out.append(
-        (color ? CliStyle.gray(kBoxBL + repeatBoxH(borderWidth) + kBoxBR) : kBoxBL + repeatBoxH(borderWidth) + kBoxBR)
+        (color ? TerminalStyle.gray(kBoxBL + repeatBoxH(borderWidth) + kBoxBR) : kBoxBL + repeatBoxH(borderWidth) + kBoxBR)
     )
     return out
 }
 
+
+/// Draws a two-column table (label + wrapped description) inside a rounded box.
 private func renderTableBox(title: String, rows: [HelpRow], hw: Int, color: Bool) -> [String] {
     guard !rows.isEmpty else { return [] }
 
@@ -215,20 +260,20 @@ private func renderTableBox(title: String, rows: [HelpRow], hw: Int, color: Bool
         let wrapped = wrapText(row.description, descWidth)
         let first =
             row.label + spaces(labelWidth - visibleWidth(row.label)) + "  "
-            + (color ? CliStyle.white(wrapped[0]) : wrapped[0])
+            + (color ? TerminalStyle.white(wrapped[0]) : wrapped[0])
         bodyLines.append(first)
         for idx in 1 ..< wrapped.count {
-            let pad = color ? CliStyle.gray(spaces(labelWidth)) : spaces(labelWidth)
-            bodyLines.append(pad + "  " + (color ? CliStyle.white(wrapped[idx]) : wrapped[idx]))
+            let pad = color ? TerminalStyle.gray(spaces(labelWidth)) : spaces(labelWidth)
+            bodyLines.append(pad + "  " + (color ? TerminalStyle.white(wrapped[idx]) : wrapped[idx]))
         }
     }
 
     var titleLead: String
     if color {
         titleLead =
-            CliStyle.gray(kBoxH + " ")
-            + CliStyle.grayBoldTitle(title)
-            + CliStyle.gray(" ")
+            TerminalStyle.gray(kBoxH + " ")
+            + TerminalStyle.grayBoldTitle(title)
+            + TerminalStyle.gray(" ")
     } else {
         titleLead = kBoxH + " " + title + " "
     }
@@ -244,23 +289,25 @@ private func renderTableBox(title: String, rows: [HelpRow], hw: Int, color: Bool
 
     var out: [String] = []
     out.append(
-        (color ? CliStyle.gray(kBoxTL) : kBoxTL)
+        (color ? TerminalStyle.gray(kBoxTL) : kBoxTL)
             + titleLead
-            + (color ? CliStyle.gray(repeatBoxH(headerFill) + kBoxTR) : repeatBoxH(headerFill) + kBoxTR)
+            + (color ? TerminalStyle.gray(repeatBoxH(headerFill) + kBoxTR) : repeatBoxH(headerFill) + kBoxTR)
     )
     for line in bodyLines {
         let padded = padVisible(line, contentWidth)
         out.append(
-            (color ? CliStyle.gray(kBoxV) : kBoxV) + " " + padded + " "
-                + (color ? CliStyle.gray(kBoxV) : kBoxV)
+            (color ? TerminalStyle.gray(kBoxV) : kBoxV) + " " + padded + " "
+                + (color ? TerminalStyle.gray(kBoxV) : kBoxV)
         )
     }
     out.append(
-        (color ? CliStyle.gray(kBoxBL + repeatBoxH(borderWidth) + kBoxBR) : kBoxBL + repeatBoxH(borderWidth) + kBoxBR)
+        (color ? TerminalStyle.gray(kBoxBL + repeatBoxH(borderWidth) + kBoxBR) : kBoxBL + repeatBoxH(borderWidth) + kBoxBR)
     )
     return out
 }
 
+
+/// Builds one or more usage synopsis lines for the current help path.
 private func usageLines(
     appName: String,
     helpPath: [String],
@@ -273,9 +320,9 @@ private func usageLines(
         fullPath += " "
         fullPath += seg
     }
-    let usageOpts = color ? CliStyle.aquaBold("[OPTIONS]") : "[OPTIONS]"
-    let usageCmd = color ? CliStyle.aquaBold("COMMAND") : "COMMAND"
-    let usageArgs = color ? CliStyle.aquaBold("[ARGS]...") : "[ARGS]..."
+    let usageOpts = color ? TerminalStyle.aquaBold("[OPTIONS]") : "[OPTIONS]"
+    let usageCmd = color ? TerminalStyle.aquaBold("COMMAND") : "COMMAND"
+    let usageArgs = color ? TerminalStyle.aquaBold("[ARGS]...") : "[ARGS]..."
 
     var out: [String] = []
     if helpPath.isEmpty {
@@ -293,12 +340,14 @@ private func usageLines(
     return out
 }
 
+
+/// Table rows for non-positional options, including implicit `--help` / `-h`.
 private func rowsForOptions(_ defs: [CliOption], color: Bool) -> [HelpRow] {
     var rows: [HelpRow] = []
     let helpLabel =
         color
-        ? CliStyle.aquaBold("--help, ")
-            + CliStyle.greenBright("-h")
+        ? TerminalStyle.aquaBold("--help, ")
+            + TerminalStyle.greenBright("-h")
         : "--help, -h"
     rows.append(HelpRow(label: helpLabel, description: "Show help for this command."))
     for o in defs where !o.positional {
@@ -307,19 +356,26 @@ private func rowsForOptions(_ defs: [CliOption], color: Bool) -> [HelpRow] {
     return rows
 }
 
+
+/// Table rows for positional arguments at the current command.
 private func rowsForPositionals(_ defs: [CliOption], color: Bool) -> [HelpRow] {
     defs.filter(\.positional).map { HelpRow(label: cliOptionLabel($0, color: color), description: $0.description) }
 }
 
+
+/// Table rows for child subcommands, sorted by name.
 private func rowsForSubcommands(_ cmds: [CliCommand]) -> [HelpRow] {
     cmds.sorted { $0.name < $1.name }.map { HelpRow(label: $0.name, description: $0.description) }
 }
 
+
+/// Joins lines with a separator (usually newline) for embedding box output in larger strings.
 private func joinLines(_ lines: [String], _ sep: String) -> String {
     lines.joined(separator: sep)
 }
 
-/// Renders help for stdout (`useStderr == false`) or stderr (`true`), matching cpp-argsbarg layout and styling.
+
+/// Renders full help for the program root or a nested command to stdout or stderr.
 public func cliHelpRender(schema: CliCommand, helpPath: [String], useStderr: Bool) -> String {
     let fd: Int32 = useStderr ? STDERR_FILENO : STDOUT_FILENO
     let hw = helpWidthFd(fd)
@@ -329,7 +385,7 @@ public func cliHelpRender(schema: CliCommand, helpPath: [String], useStderr: Boo
         var lines: [String] = []
         lines.append("")
         if !schema.description.isEmpty {
-            lines.append(color ? CliStyle.white(schema.description) : schema.description)
+            lines.append(color ? TerminalStyle.white(schema.description) : schema.description)
             lines.append("")
         }
         lines.append(
@@ -370,19 +426,19 @@ public func cliHelpRender(schema: CliCommand, helpPath: [String], useStderr: Boo
     var node: CliCommand?
     for seg in helpPath {
         guard let ch = findChild(layer, seg) else {
-            return (color ? CliStyle.red("Unknown help path.") : "Unknown help path.") + "\n"
+            return (color ? TerminalStyle.red("Unknown help path.") : "Unknown help path.") + "\n"
         }
         node = ch
         layer = ch.children
     }
     guard let n = node else {
-        return (color ? CliStyle.red("Unknown help path.") : "Unknown help path.") + "\n"
+        return (color ? TerminalStyle.red("Unknown help path.") : "Unknown help path.") + "\n"
     }
 
     var lines: [String] = []
     lines.append("")
     if !n.description.isEmpty {
-        lines.append(color ? CliStyle.white(n.description) : n.description)
+        lines.append(color ? TerminalStyle.white(n.description) : n.description)
         lines.append("")
     }
     lines.append(

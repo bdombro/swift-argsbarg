@@ -1,15 +1,24 @@
+// Argument parsing and schema validation for declarative CLI trees.
+// Mirrors the C++ parser’s behavior: options, help, subcommand routing, and positional tails.
+// Produces a `ParseResult` for `cliRun` and validates the static schema before execution.
+
 #if canImport(Darwin)
 import Darwin
 #else
 import Glibc
 #endif
 
+/// Outcome of a parse: success, help request, or fatal user error.
 enum ParseKind {
+    /// Normal parse; handler may run.
     case ok
+    /// User asked for help (`-h` / `--help`) or hit an incomplete command.
     case help
+    /// User error (unknown command, bad option, arity mismatch).
     case error
 }
 
+/// Structured parse output: routed path, merged options, positional args, and help/error metadata.
 struct ParseResult {
     var kind: ParseKind = .ok
     var path: [String] = []
@@ -21,6 +30,7 @@ struct ParseResult {
     var errorHelpPath: [String] = []
 }
 
+/// Thrown when the static `CliCommand` tree violates ArgsBarg rules.
 enum CliSchemaValidationError: Error, CustomStringConvertible {
     case message(String)
 
@@ -34,23 +44,31 @@ enum CliSchemaValidationError: Error, CustomStringConvertible {
 private let helpShort = "-h"
 private let helpLong = "--help"
 
+/// Returns whether `tok` is `-h` or `--help`.
 private func isHelpTok(_ tok: String) -> Bool {
     tok == helpShort || tok == helpLong
 }
 
+
+/// Finds a direct child command by name.
 func findChild(_ cmds: [CliCommand], _ name: String) -> CliCommand? {
     cmds.first { $0.name == name }
 }
 
+
+/// Looks up an option definition by long name within a definition list.
 func findOptionByName(_ defs: [CliOption], _ name: String) -> CliOption? {
     defs.first { $0.name == name }
 }
 
+
+/// Looks up a non-positional option by its short character.
 private func findOptionDefByShort(_ defs: [CliOption], _ short: Character) -> CliOption? {
     defs.first { !$0.positional && $0.shortName == short }
 }
 
-/// Match C++ `strtod` consuming the entire string (no leading/trailing junk).
+
+/// Returns whether `s` is a valid `strtod` number with no extra characters (matches C++).
 func fullStringIsDouble(_ s: String) -> Bool {
     if s.isEmpty { return false }
     return s.withCString { ptr -> Bool in
@@ -61,6 +79,8 @@ func fullStringIsDouble(_ s: String) -> Bool {
     }
 }
 
+
+/// Parses a strict double from `s`, or returns `nil` if the string is not a full numeric token.
 func strictParseDouble(_ s: String) -> Double? {
     guard fullStringIsDouble(s) else { return nil }
     return s.withCString { ptr -> Double in
@@ -69,11 +89,14 @@ func strictParseDouble(_ s: String) -> Double? {
     }
 }
 
+/// Result of scanning argv for flags: optional error, or stop-at-unknown for lenient roots.
 private struct ConsumeReport {
     var err: String?
     var stoppedOnUnknown: Bool = false
 }
 
+
+/// Consumes long/short options from `argv` starting at `i`, mutating `opts`.
 private func consumeOptions(
     defs: [CliOption],
     lenientUnknown: Bool,
@@ -81,6 +104,7 @@ private func consumeOptions(
     i: inout Int,
     opts: inout [String: String]
 ) -> ConsumeReport {
+    /// Handles one `--name` or `--name=value` token.
     func consumeLong(_ tok: String) -> String? {
         let body = tok.dropFirst(2)
         let optName: String
@@ -123,6 +147,8 @@ private func consumeOptions(
         return nil
     }
 
+
+    /// Handles one `-x` or bundled `-abc` token for non-positional options.
     func consumeShort(_ tok: String) -> String? {
         guard tok.count >= 2 else {
             return "Unexpected option token: \(tok)"
@@ -187,6 +213,8 @@ private func consumeOptions(
     return ConsumeReport()
 }
 
+
+/// Collects positional arguments for a leaf command and returns ok or an arity error.
 private func finishLeaf(
     node: CliCommand,
     i: inout Int,
@@ -194,6 +222,7 @@ private func finishLeaf(
     path: [String],
     opts: [String: String]
 ) -> ParseResult {
+    /// Wraps a user-facing error with the current help path.
     func errorResult(_ msg: String) -> ParseResult {
         var pr = ParseResult()
         pr.kind = .error
@@ -253,11 +282,14 @@ private func finishLeaf(
     return pr
 }
 
+
+/// Parses `argv` against `root`, routing subcommands and filling `ParseResult`.
 func parse(root: CliCommand, argv: [String]) -> ParseResult {
     var i = 0
     var path: [String] = []
     var opts: [String: String] = [:]
 
+    /// Builds a help-dispatch result for the given path.
     func helpResult(_ p: [String], _ explicit: Bool) -> ParseResult {
         var r = ParseResult()
         r.kind = .help
@@ -266,6 +298,8 @@ func parse(root: CliCommand, argv: [String]) -> ParseResult {
         return r
     }
 
+
+    /// Builds an error result with the current routed path for contextual help.
     func errorResult(_ msg: String) -> ParseResult {
         var r = ParseResult()
         r.kind = .error
@@ -393,6 +427,8 @@ func parse(root: CliCommand, argv: [String]) -> ParseResult {
     }
 }
 
+
+/// Re-checks option values against merged definitions (e.g. numeric options).
 func postParseValidate(root: CliCommand, pr: ParseResult) -> ParseResult {
     guard pr.kind == .ok else { return pr }
 
@@ -435,6 +471,7 @@ func postParseValidate(root: CliCommand, pr: ParseResult) -> ParseResult {
 
 // MARK: - Schema validation
 
+/// Ensures short names are unique and not reserved in this option scope.
 private func checkOptions(_ defs: [CliOption], scope: String) throws {
     var seenShorts = Set<Character>()
     for d in defs {
@@ -458,6 +495,8 @@ private func checkOptions(_ defs: [CliOption], scope: String) throws {
     }
 }
 
+
+/// Validates positional arity rules and ordering within a scope.
 private func checkPositionals(_ defs: [CliOption], scope: String) throws {
     let pos = defs.filter(\.positional)
     for (idx, d) in pos.enumerated() {
@@ -494,6 +533,8 @@ private func checkPositionals(_ defs: [CliOption], scope: String) throws {
     }
 }
 
+
+/// Recursively validates one command node: handler vs children, fallbacks, and duplicate names.
 private func walkCommand(_ cmd: CliCommand) throws {
     if cmd.fallbackCommand != nil {
         throw CliSchemaValidationError.message(
@@ -535,6 +576,8 @@ private func walkCommand(_ cmd: CliCommand) throws {
     }
 }
 
+
+/// Validates the program root and entire tree before `cliRun` parses argv.
 func cliValidateRoot(_ root: CliCommand) throws {
     if root.handler != nil {
         throw CliSchemaValidationError.message(
