@@ -11,7 +11,7 @@
 
 Build beautiful, well-behaved CLI apps in Swift — **no third-party runtime dependencies**, just add the **ArgsBarg** package.
 
-Vs. [Swift ArgumentParser](https://github.com/apple/swift-argument-parser), **ArgsBarg** is *schema-first* -- define your entire CLI’s structure, commands, options, and help in a single, explicit data model, making the command-line interface centralized, clear and self-describing upfront.
+Vs. [Swift ArgumentParser](https://github.com/apple/swift-argument-parser), **ArgsBarg** is *schema-first* -- define your entire CLI’s structure, commands, options, and help in a single, explicit data model, making the command-line interface centralized, clear and self-describing upfront. `swift-argsbarg` has siblings --> [cpp](https://github.com/bdombro/cpp-argsbarg), [nim](https://github.com/bdombro/nim-argsbarg).
 
 Halps! -->
 ![help-preview.png](docs/help-preview.png)
