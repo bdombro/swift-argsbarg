@@ -1,8 +1,6 @@
 ![Logo](logo.png)
 <!-- Big money NE - https://patorjk.com/software/taag/#p=testall&f=Bulbhead&t=shebangsy&x=none&v=4&h=4&w=80&we=false> -->
 
-# ArgsBarg
-
 [![GitHub](https://img.shields.io/badge/GitHub-bdombro%2Fswift--argsbarg-181717?logo=github)](https://github.com/bdombro/swift-argsbarg)
 
 [![CI](https://github.com/bdombro/swift-argsbarg/actions/workflows/ci.yml/badge.svg)](https://github.com/bdombro/swift-argsbarg/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -11,7 +9,7 @@
 
 Build beautiful, well-behaved CLI apps in Swift — **no third-party runtime dependencies**, just add the **ArgsBarg** package.
 
-Vs. [Swift ArgumentParser](https://github.com/apple/swift-argument-parser), **ArgsBarg** is *schema-first* -- define your entire CLI’s structure, commands, options, and help in a single, explicit data model, making the command-line interface centralized, clear and self-describing upfront. `swift-argsbarg` has siblings --> [cpp](https://github.com/bdombro/cpp-argsbarg), [nim](https://github.com/bdombro/nim-argsbarg).
+Vs. [Swift ArgumentParser](https://github.com/apple/swift-argument-parser), **ArgsBarg** is *schema-first* -- define your entire CLI’s structure, commands, options, and help in a single, explicit data model, making the command-line interface centralized, clear and self-describing upfront. `swift-argsbarg` has siblings --> [bun](https://github.com/bdombro/bun-argsbarg), [cpp](https://github.com/bdombro/cpp-argsbarg), [nim](https://github.com/bdombro/nim-argsbarg).
 
 Halps! -->
 ![help-preview.png](docs/help-preview.png)
