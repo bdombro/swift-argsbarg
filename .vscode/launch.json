@@ -39,6 +39,46 @@
       "target": "ArgsBargNested",
       "configuration": "release",
       "preLaunchTask": "swift: Build Release ArgsBargNested"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:swift-argsbarg}",
+      "name": "Debug ArgsBargOptionRequired",
+      "target": "ArgsBargOptionRequired",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug ArgsBargOptionRequired"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:swift-argsbarg}",
+      "name": "Release ArgsBargOptionRequired",
+      "target": "ArgsBargOptionRequired",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release ArgsBargOptionRequired"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:swift-argsbarg}",
+      "name": "Debug ArgsBargSingleCommand",
+      "target": "ArgsBargSingleCommand",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug ArgsBargSingleCommand"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:swift-argsbarg}",
+      "name": "Release ArgsBargSingleCommand",
+      "target": "ArgsBargSingleCommand",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release ArgsBargSingleCommand"
     }
   ]
 }

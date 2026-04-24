@@ -120,10 +120,7 @@ public func cliRun(_ root: CliCommand) -> Never {
         exit(1)
 
     case .ok:
-        guard !pr.path.isEmpty else {
-            FileHandle.standardError.write(Data("Internal error: empty path.\n".utf8))
-            exit(1)
-        }
+        // For a root handler, the path is empty. That is valid.
 
         if pr.path == ["completion", "bash"] {
             print(completionBashScript(schema: merged), terminator: "")
@@ -135,7 +132,8 @@ public func cliRun(_ root: CliCommand) -> Never {
         }
 
         var layer = merged.children
-        var leaf: CliCommand?
+        var leaf: CliCommand? = merged.handler != nil ? merged : nil
+        
         for seg in pr.path {
             guard let n = findChild(layer, seg) else {
                 FileHandle.standardError.write(Data("Internal error: missing handler for path.\n".utf8))

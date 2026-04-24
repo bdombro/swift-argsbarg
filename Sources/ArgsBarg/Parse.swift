@@ -335,6 +335,9 @@ func parse(root: CliCommand, argv: [String]) -> ParseResult {
     var node: CliCommand?
 
     if i >= argv.count {
+        if root.handler != nil {
+            return finishLeaf(node: root, i: &i, argv: argv, path: [], opts: opts)
+        }
         if let fb = root.fallbackCommand,
             root.fallbackMode == .missingOnly || root.fallbackMode == .missingOrUnknown
         {
@@ -357,6 +360,8 @@ func parse(root: CliCommand, argv: [String]) -> ParseResult {
             cmdName = peek
             i += 1
             node = childPick
+        } else if root.handler != nil {
+            return finishLeaf(node: root, i: &i, argv: argv, path: [], opts: opts)
         } else if canRouteUnknown {
             cmdName = root.fallbackCommand!
             node = findChild(root.children, cmdName)
@@ -466,6 +471,17 @@ func postParseValidate(root: CliCommand, pr: ParseResult) -> ParseResult {
             }
         }
     }
+
+    for d in defs where d.required && !d.positional {
+        if pr.opts[d.name] == nil {
+            var r = ParseResult()
+            r.kind = .error
+            r.errorHelpPath = pr.path
+            r.errorMsg = "Missing required option: --\(d.name)"
+            return r
+        }
+    }
+
     return pr
 }
 
@@ -580,13 +596,25 @@ private func walkCommand(_ cmd: CliCommand) throws {
 /// Validates the program root and entire tree before `cliRun` parses argv.
 func cliValidateRoot(_ root: CliCommand) throws {
     if root.handler != nil {
-        throw CliSchemaValidationError.message(
-            "Program root must not set handler (use children for subcommands)"
-        )
+        if !root.children.isEmpty {
+            throw CliSchemaValidationError.message(
+                "Program root with a handler must not have children"
+            )
+        }
+        if root.fallbackCommand != nil || root.fallbackMode != .missingOnly {
+            throw CliSchemaValidationError.message(
+                "Program root with a handler must not set fallback behavior"
+            )
+        }
+        try checkOptions(root.options, scope: root.name)
+        try checkPositionals(root.positionals, scope: root.name)
+        try checkOptions(root.positionals, scope: root.name)
+        return
     }
+
     if !root.positionals.isEmpty {
         throw CliSchemaValidationError.message(
-            "Program root must not declare positionals"
+            "Program root must not declare positionals unless it has a handler"
         )
     }
 

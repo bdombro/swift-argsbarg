@@ -48,7 +48,7 @@ private func collectScopes(schema: CliCommand) -> [ScopeRec] {
             kids: schema.children,
             opts: schema.options,
             path: "",
-            wantsFiles: false
+            wantsFiles: hasPositionalArguments(schema)
         ))
     for c in schema.children {
         walkScopes(cmdPath: c.name, cmd: c, acc: &acc)
@@ -289,8 +289,9 @@ private func emitMainBody(schema: CliCommand, ident: String, scopes: [ScopeRec])
         o += "      \(i))\n"
         o += "        if [[ ${_\(ident)_leaf_\(i)} -eq 0 ]]; then\n"
         o += "          COMPREPLY=( $(compgen -W \"${_\(ident)_cmds_\(i)[*]}\" -- \"$cur\") )\n"
-        o += "        elif [[ ${_\(ident)_pos_\(i)} -eq 1 ]]; then\n"
-        o += "          COMPREPLY=( $(compgen -f -- \"$cur\") )\n"
+        o += "        fi\n"
+        o += "        if [[ ${_\(ident)_pos_\(i)} -eq 1 ]]; then\n"
+        o += "          COMPREPLY+=( $(compgen -f -- \"$cur\") )\n"
         o += "        fi ;;\n"
     }
     o += "    esac\n"
@@ -532,11 +533,10 @@ private func emitMainBodyZsh(schema: CliCommand, ident: String) -> String {
     o += "      local cname=\"A_\(ident)_${sid}_cmds\"\n"
     o += "      cmdsarr=(${(P@)cname})\n"
     o += "      _describe -t commands 'command' cmdsarr && ret=0\n"
-    o += "    else\n"
-    o += "      local pname=\"A_\(ident)_${sid}_pos\"\n"
-    o += "      if [[ ${(P)pname} -eq 1 ]]; then\n"
-    o += "        _files && ret=0\n"
-    o += "      fi\n"
+    o += "    fi\n"
+    o += "    local pname=\"A_\(ident)_${sid}_pos\"\n"
+    o += "    if [[ ${(P)pname} -eq 1 ]]; then\n"
+    o += "      _files && ret=0\n"
     o += "    fi\n"
     o += "  fi\n"
     o += "  return ret\n"
