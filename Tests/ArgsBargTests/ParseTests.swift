@@ -149,7 +149,7 @@ final class ParseTests: XCTestCase {
         XCTAssertTrue(script.contains("hello"))
     }
 
-    func testRootMustNotHaveHandler() throws {
+    func testRootHandlerCannotHaveChildren() throws {
         let root = CliCommand(
             name: "app",
             description: "",
@@ -157,11 +157,11 @@ final class ParseTests: XCTestCase {
             handler: { _ in }
         )
         XCTAssertThrowsError(try cliValidateRoot(root)) { err in
-            XCTAssertTrue(String(describing: err).contains("Program root must not set handler"))
+            XCTAssertTrue(String(describing: err).contains("Program root with a handler must not have children"))
         }
     }
 
-    func testRootMustNotHavePositionals() throws {
+    func testRootMustNotHavePositionalsWithoutHandler() throws {
         let root = CliCommand(
             name: "app",
             description: "",
@@ -171,8 +171,37 @@ final class ParseTests: XCTestCase {
             children: [CliCommand(name: "x", description: "", handler: { _ in })]
         )
         XCTAssertThrowsError(try cliValidateRoot(root)) { err in
-            XCTAssertTrue(String(describing: err).contains("Program root must not declare positionals"))
+            XCTAssertTrue(String(describing: err).contains("Program root must not declare positionals unless it has a handler"))
         }
+    }
+
+    func testRootHandlerValidWithPositionals() throws {
+        let root = CliCommand(
+            name: "app",
+            description: "",
+            positionals: [
+                CliOption(name: "p", description: "", kind: .string, positional: true),
+            ],
+            handler: { _ in }
+        )
+        XCTAssertNoThrow(try cliValidateRoot(root))
+    }
+
+    func testRootHandlerCompletionScriptPositionalHandling() throws {
+        let root = CliCommand(
+            name: "myapp",
+            description: "Test",
+            positionals: [
+                CliOption(name: "p", description: "", kind: .string, positional: true),
+            ],
+            handler: { _ in }
+        )
+        let merged = cliRootMergedWithBuiltins(root)
+        let bash = completionBashScript(schema: merged)
+        XCTAssertTrue(bash.contains("_myapp_pos_0=1"), "Bash script should recognize root positionals for single command")
+        
+        let zsh = completionZshScript(schema: merged)
+        XCTAssertTrue(zsh.contains("A_myapp_0_pos=1"), "Zsh script should recognize root positionals for single command")
     }
 
     func testNestedFallbackRejected() throws {

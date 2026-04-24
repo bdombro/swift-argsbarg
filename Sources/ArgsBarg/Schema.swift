@@ -30,6 +30,7 @@ public struct CliOption {
     public var kind: CliOptionKind
     public var shortName: Character?
     public var positional: Bool
+    public var required: Bool
     public var argMin: Int
     public var argMax: Int
 
@@ -40,6 +41,7 @@ public struct CliOption {
         kind: CliOptionKind = .presence,
         shortName: Character? = nil,
         positional: Bool = false,
+        required: Bool = false,
         argMin: Int = 1,
         argMax: Int = 1
     ) {
@@ -48,6 +50,7 @@ public struct CliOption {
         self.kind = kind
         self.shortName = shortName
         self.positional = positional
+        self.required = required
         self.argMin = argMin
         self.argMax = argMax
     }

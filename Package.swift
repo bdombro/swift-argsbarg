@@ -10,6 +10,8 @@ let package = Package(
         .library(name: "ArgsBarg", targets: ["ArgsBarg"]),
         .executable(name: "ArgsBargMinimal", targets: ["ArgsBargMinimal"]),
         .executable(name: "ArgsBargNested", targets: ["ArgsBargNested"]),
+        .executable(name: "ArgsBargOptionRequired", targets: ["ArgsBargOptionRequired"]),
+        .executable(name: "ArgsBargSingleCommand", targets: ["ArgsBargSingleCommand"]),
     ],
     targets: [
         .target(
@@ -25,6 +27,16 @@ let package = Package(
             name: "ArgsBargNested",
             dependencies: ["ArgsBarg"],
             path: "Examples/Nested"
+        ),
+        .executableTarget(
+            name: "ArgsBargOptionRequired",
+            dependencies: ["ArgsBarg"],
+            path: "Examples/OptionRequired"
+        ),
+        .executableTarget(
+            name: "ArgsBargSingleCommand",
+            dependencies: ["ArgsBarg"],
+            path: "Examples/SingleCommand"
         ),
         .testTarget(
             name: "ArgsBargTests",

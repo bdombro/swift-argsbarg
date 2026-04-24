@@ -370,7 +370,8 @@ private func rowsForOptions(_ defs: [CliOption], color: Bool) -> [HelpRow] {
         : "--help, -h"
     rows.append(HelpRow(label: helpLabel, description: "Show help for this command."))
     for o in defs where !o.positional {
-        rows.append(HelpRow(label: cliOptionLabel(o, color: color), description: o.description))
+        let desc = o.required ? "(Required) " + o.description : o.description
+        rows.append(HelpRow(label: cliOptionLabel(o, color: color), description: desc))
     }
     return rows
 }
@@ -415,7 +416,7 @@ public func cliHelpRender(schema: CliCommand, helpPath: [String], useStderr: Boo
                         appName: schema.name,
                         helpPath: helpPath,
                         hasCommands: !schema.children.isEmpty,
-                        hasArgs: false,
+                        hasArgs: !schema.positionals.isEmpty,
                         color: color
                     ),
                     hw: hw,
@@ -437,6 +438,17 @@ public func cliHelpRender(schema: CliCommand, helpPath: [String], useStderr: Boo
                     "\n"
                 )
             )
+        } else {
+            let posBox = renderTableBox(
+                title: "Arguments",
+                rows: rowsForPositionals(schema.positionals, color: color),
+                hw: hw,
+                color: color
+            )
+            if !posBox.isEmpty {
+                lines.append("")
+                lines.append(joinLines(posBox, "\n"))
+            }
         }
         return joinLines(lines, "\n") + "\n\n"
     }

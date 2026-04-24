@@ -43,6 +43,12 @@ public final class CliContext: @unchecked Sendable {
     }
 
 
+    /// Returns the string value for an option that is guaranteed to be present (e.g., `required: true`).
+    public func reqStringOpt(_ name: String) -> String {
+        opts[name]!
+    }
+
+
     /// Parses a stored string as a number; returns `nil` if missing or not a strict double string.
     public func numberOpt(_ name: String) -> Double? {
         guard let s = opts[name] else { return nil }

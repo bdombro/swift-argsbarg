@@ -43,39 +43,36 @@ Everything you need for a first-class CLI:
 ## Usage
 
 ```swift
+import Foundation
 import ArgsBarg
 
-cliRun(
-    CliCommand(
-        name: "helloapp",
-        description: "Tiny demo.",
-        children: [
-            CliCommand(
-                name: "hello",
-                description: "Say hello.",
-                options: [
-                    CliOption(
-                        name: "name",
-                        description: "Who to greet.",
-                        kind: .string,
-                        shortName: "n"
-                    ),
-                    CliOption(
-                        name: "verbose",
-                        description: "Enable extra logging.",
-                        shortName: "v"
-                    ),
-                ],
-                handler: { ctx in
-                    let name = ctx.stringOpt("name") ?? "world"
-                    if ctx.flag("verbose") { print("verbose mode") }
-                    print("hello \(name)")
-                }
-            )
-        ],
-        fallbackCommand: "hello",
-        fallbackMode: .missingOrUnknown
-    ))
+let cli = CliCommand(
+    name: "ArgsBargSingleCommand",
+    description: "A simple single-command CLI.",
+    options: [
+        CliOption(
+            name: "verbose",
+            description: "Enable verbose output.",
+            shortName: "v"
+        )
+    ],
+    positionals: [
+        CliOption(
+            name: "target",
+            description: "The target file or directory.",
+            positional: true
+        )
+    ],
+    handler: { ctx in
+        let target = ctx.args[0]
+        let verbose = ctx.flag("verbose")
+        print("Running single-command CLI...")
+        print("Target: \(target)")
+        print("Verbose: \(verbose)")
+    }
+)
+
+cliRun(cli)
 ```
 
 `cliRun` parses `CommandLine.arguments`, prints help or errors, dispatches the leaf handler, and **exits the process** (like the C++ `run()`).
@@ -108,7 +105,7 @@ In `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/bdombro/swift-argsbarg.git", from: "0.3.0"),
+    .package(url: "https://github.com/bdombro/swift-argsbarg.git", from: "0.4.0"),
 ],
 targets: [
     .target(
