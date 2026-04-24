@@ -108,7 +108,7 @@ In `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/bdombro/swift-argsbarg.git", from: "0.2.0"),
+    .package(url: "https://github.com/bdombro/swift-argsbarg.git", from: "0.3.0"),
 ],
 targets: [
     .target(
@@ -124,7 +124,9 @@ targets: [
 
 ## How it works
 
-1. Build a **program root** `CliCommand`: `name` is the app/binary name, `children` are top-level subcommands, `options` are global flags. The root must not set `handler` or declare `positionals` (validated at startup). Use `fallbackCommand` / `fallbackMode` on the root only for default top-level routing.
+1. Build a **program root** `CliCommand`: `name` is the app/binary name, `options` are global flags.
+   - For a **single-command CLI**, set the `handler` directly on the root. The root is treated as a leaf and may declare `positionals`.
+   - For a **multi-command CLI**, provide `children` for subcommands. The root must not set a `handler` or declare `positionals` (validated at startup). Use `fallbackCommand` / `fallbackMode` on the root for default routing.
 2. Call `cliRun(_:)` with that root — validates, parses argv, renders help or errors, invokes the leaf handler, `exit`s with status **0** on success, **1** on implicit help or error (explicit `--help` → **0**).
 3. From a handler, `cliErrWithHelp(ctx, "message")` prints a red error line plus contextual help on stderr and exits **1**.
 
@@ -153,6 +155,7 @@ Use `CliOption` with `positional: true`. With `argMax == 0`, the tail accepts at
 
 - `ctx.flag("verbose")` — presence options.
 - `ctx.stringOpt("name")` / `ctx.numberOpt("count")` — `String?` / `Double?`.
+- `ctx.reqStringOpt("name")` — `String` (safe access when `required: true`).
 - `ctx.args` — positional words in order.
 - `ctx.schema` — merged program root (`CliCommand`) for contextual help.
 
@@ -166,6 +169,8 @@ Shipped executable targets (see `Package.swift`):
 | --- | --- | --- |
 | `ArgsBargMinimal` | `Examples/Minimal/` | String + presence flags, `missingOrUnknown` fallback. |
 | `ArgsBargNested` | `Examples/Nested/` | Nested `CliCommand` tree, positional tails, `unknownOnly` fallback. |
+| `ArgsBargOptionRequired` | `Examples/OptionRequired/` | Using `required: true` on an option and `reqStringOpt`. |
+| `ArgsBargSingleCommand` | `Examples/SingleCommand/` | Single-command CLI using a root `handler` and root positionals. |
 
 ```bash
 swift run ArgsBargMinimal --help

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-24
+
+### Added
+
+- `required: Bool` property on `CliOption` to enforce mandatory command-line flags at the parser level.
+- `reqStringOpt(_ name: String)` to `CliContext` for convenient, non-optional access to guaranteed required options.
+- Visual `(Required)` indicator in the help table for mandatory options.
+- `ArgsBargOptionRequired` example showing mandatory option validation.
+- Single-command CLI support: `CliCommand` program roots can now set a `handler` and declare `positionals` to execute as a leaf node without requiring subcommands.
+- `ArgsBargSingleCommand` example demonstrating the new single-command CLI pattern.
+
+### Changed
+- Shell completion scripts (`completion bash` and `completion zsh`) now correctly emit file completion logic for single-command CLI roots, allowing file suggestions alongside the built-in `completion` subcommand.
+
+
 ## [0.2.0] - 2026-04-19
 
 ### Changed
@@ -48,7 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[Unreleased]: https://github.com/bdombro/swift-argsbarg/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/bdombro/swift-argsbarg/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/bdombro/swift-argsbarg/releases/tag/v0.3.0
 [0.2.0]: https://github.com/bdombro/swift-argsbarg/releases/tag/v0.2.0
 [0.1.1]: https://github.com/bdombro/swift-argsbarg/releases/tag/v0.1.1
 [0.1.0]: https://github.com/bdombro/swift-argsbarg/releases/tag/v0.1.0
